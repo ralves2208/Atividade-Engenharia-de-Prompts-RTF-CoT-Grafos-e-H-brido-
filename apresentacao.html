@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Trabalho de Engenharia de Prompts e Chatbots - BIA0109NA">
+<title>Engenharia de Prompts e Chatbots | BIA0109NA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0b0e14;
+    --surface: #111520;
+    --card: #161b27;
+    --border: #1f2840;
+    --accent: #4ade80;
+    --accent2: #38bdf8;
+    --accent3: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code-bg: #0d1117;
+  }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Acessibilidade: foco visível */
+  :focus-visible {
+    outline: 2px solid var(--accent2);
+    outline-offset: 2px;
+  }
+
+  /* Skip link para acessibilidade */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--accent);
+    color: #000;
+    padding: 8px 16px;
+    z-index: 100;
+    border-radius: 0 0 8px 0;
+    font-weight: 600;
+  }
+  .skip-link:focus { top: 0; }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 28px 20px;
+    background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(74,222,128,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(56,189,248,0.10) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .course-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  header p {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    role: tablist;
+  }
+
+  .tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    role: tab;
+    aria-selected: false;
+  }
+
+  .tab:hover { border-color: var(--accent2); color: var(--accent2); }
+  .tab[aria-selected="true"] {
+    background: rgba(74,222,128,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+    box-shadow: 0 0 0 2px var(--accent), 0 4px 12px rgba(74,222,128,0.3);
+  }
+
+  .panel { 
+    display: none; 
+    animation: fadeIn 0.3s ease-out;
+  }
+  .panel.active { display: block; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .prompt-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  
+  .prompt-card:hover {
+    border-color: var(--accent2);
+  }
+
+  .prompt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .prompt-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-rtf { background: rgba(74,222,128,0.15); color: var(--accent); border: 1px solid rgba(74,222,128,0.3); }
+  .badge-cot { background: rgba(56,189,248,0.15); color: var(--accent2); border: 1px solid rgba(56,189,248,0.3); }
+  .badge-grafo { background: rgba(245,158,11,0.15); color: var(--accent3); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-ctx { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+
+  .copy-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent); color: var(--accent); background: rgba(74,222,128,0.08); }
+
+  .prompt-body {
+    padding: 18px;
+  }
+
+  .prompt-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.8;
+    color: #c9d1d9;
+    background: var(--code-bg);
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    padding: 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+    user-select: text;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .improvement-box {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: rgba(74,222,128,0.04);
+    border: 1px solid rgba(74,222,128,0.12);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+  }
+
+  .improvement-box h4 {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .improvement-box p {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.7;
+  }
+
+  .base-prompt-box {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .base-prompt-box .label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 5px;
+  }
+
+  .base-prompt-box .base-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  .highlight-role { color: #4ade80; }
+  .highlight-bracket { color: #f59e0b; }
+  .highlight-section { color: #38bdf8; }
+  .highlight-arrow { color: #f472b6; }
+
+  /* Botão Modo Apresentação */
+  #present-mode {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #present-mode:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+
+  /* Modo Apresentação */
+  body.present-mode .copy-btn,
+  body.present-mode .improvement-box,
+  body.present-mode .base-prompt-box,
+  body.present-mode #present-mode {
+    display: none !important;
+  }
+  body.present-mode .prompt-code {
+    font-size: 14px !important;
+    line-height: 2 !important;
+  }
+  body.present-mode header h1 { font-size: 28px !important; }
+  body.present-mode .prompt-title { font-size: 16px !important; }
+
+  /* Utilitários de acessibilidade */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Print styles - backup para PDF */
+  @media print {
+    body {
+      background: #fff;
+      color: #000;
+      padding: 0;
+      font-size: 12pt;
+    }
+    header, .tabs, .copy-btn, #present-mode {
+      display: none;
+    }
+    .panel { display: block !important; margin-bottom: 30px; }
+    .prompt-card {
+      border: 1px solid #ccc;
+      break-inside: avoid;
+    }
+    .prompt-code {
+      background: #f5f5f5;
+      color: #000;
+      border: 1px solid #ddd;
+      font-size: 10pt;
+    }
+  }
+
+  /* Responsividade */
+  @media (max-width: 600px) {
+    header h1 { font-size: 18px; }
+    .tab { font-size: 10px; padding: 6px 10px; }
+    .prompt-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+
+<header>
+  <div class="course-tag">BIA0109NA · 2026/1</div>
+  <h1>Engenharia de Prompts e Chatbots</h1>
+  <p>5 prompts refinados — RTF · CoT · Fluxo Condicional · Grafo</p>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Exercícios de engenharia de prompts">
+  <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-0" id="tab-0" onclick="switchTab(0)">Ex.1 — RTF</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="panel-1" id="tab-1" onclick="switchTab(1)">Ex.2 — Contexto</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="panel-2" id="tab-2" onclick="switchTab(2)">Ex.3 — CoT</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="panel-3" id="tab-3" onclick="switchTab(3)">Ex.4 — Fluxo</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="panel-4" id="tab-4" onclick="switchTab(4)">Ex.5 — Tutor IA</button>
+</div>
+
+<main id="main-content">
+
+<!-- EXERCÍCIO 1 -->
+<div class="panel active" id="panel-0" role="tabpanel" aria-labelledby="tab-0">
+  <div class="prompt-card">
+    <div class="prompt-header">
+      <div class="prompt-title">
+        Exercício 1 — Estruturação RTF
+        <span class="badge badge-rtf">RTF</span>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt(this, 'p1')" aria-label="Copiar prompt do Exercício 1">📋 Copiar</button>
+    </div>
+    <div class="prompt-body">
+      <div class="base-prompt-box">
+        <div class="label">PROMPT BASE ORIGINAL:</div>
+        <div class="base-text">"Você é um professor de matemática. Explique equações do 2º grau. Organize em tópicos."</div>
+      </div>
+      <div id="p1" class="prompt-code">[ROLE]
+Você é um professor de matemática do ensino médio, com experiência
+em didática e em tornar conceitos abstratos acessíveis a estudantes
+de 14 a 17 anos.
+
+[TASK]
+Explique o conceito de equações do 2º grau de forma completa e
+progressiva, cobrindo:
+- Definição e forma geral (ax² + bx + c = 0)
+- Identificação dos coeficientes a, b e c
+- Cálculo do discriminante (Δ = b² - 4ac)
+- Fórmula de Bhaskara
+- Interpretação das raízes (Δ > 0, Δ = 0, Δ < 0)
+
+[FORMAT]
+Organize em tópicos numerados:
+1. O que é uma equação do 2º grau?
+2. Forma geral e coeficientes (a, b, c)
+3. Cálculo do discriminante (Δ)
+4. Fórmula de Bhaskara
+5. Exemplos resolvidos passo a passo
+Use linguagem clara, com exemplos numéricos em cada tópico.
+
+[CONTEXTO]
+Os alunos já dominam equações do 1º grau e operações básicas com
+potências, mas nunca tiveram contato com equações do 2º grau.
+
+[RESTRIÇÕES]
+- Não use notação matemática avançada (cálculo, limites)
+- Limite cada tópico a no máximo 5 linhas de explicação
+- Inclua ao menos 2 exemplos numéricos completamente resolvidos
+- Não assuma conhecimento prévio de fatoração</div>
+      <div class="improvement-box">
+        <h4>✦ Melhorias realizadas</h4>
+        <p>O prompt original era vago quanto ao perfil do aluno e ao nível de profundidade esperado. A estrutura RTF adicionou papel claro (professor do ensino médio), tarefa detalhada com subtópicos obrigatórios, formato com numeração explícita, contexto do conhecimento prévio dos alunos e restrições que evitam respostas avançadas demais ou superficiais.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCÍCIO 2 -->
+<div class="panel" id="panel-1" role="tabpanel" aria-labelledby="tab-1" hidden>
+  <div class="prompt-card">
+    <div class="prompt-header">
+      <div class="prompt-title">
+        Exercício 2 — Refinamento com Contexto
+        <span class="badge badge-ctx">CONTEXTO</span>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt(this, 'p2')" aria-label="Copiar prompt do Exercício 2">📋 Copiar</button>
+    </div>
+    <div class="prompt-body">
+      <div class="base-prompt-box">
+        <div class="label">PROMPT BASE ORIGINAL:</div>
+        <div class="base-text">"Você é um especialista em marketing. Crie um plano de conteúdo."</div>
+      </div>
+      <div id="p2" class="prompt-code">[ROLE]
+Você é um especialista em marketing digital com foco em redes sociais
+para pequenos negócios brasileiros.
+
+[TASK]
+Crie um plano de conteúdo mensal (4 semanas) para uma loja de roupas
+femininas que deseja aumentar engajamento e vendas pelo Instagram
+e TikTok.
+
+[PÚBLICO-ALVO]
+Mulheres entre 18 e 35 anos, classe B/C, interessadas em moda
+acessível e tendências. Seguem influenciadoras de lifestyle no
+Instagram e TikTok.
+
+[CANAL]
+- Instagram: foco em Reels e Stories (3 posts por semana)
+- TikTok: vídeos curtos de 15 a 60 segundos (2 posts por semana)
+
+[TOM DE COMUNICAÇÃO]
+Descontraído, próximo e inspirador. Evite linguagem muito formal.
+Use gírias leves e emojis com moderação.
+
+[FORMAT — SAÍDA EM TABELA]
+Apresente o plano no seguinte formato:
+
+| Semana | Dia | Canal | Tipo de Conteúdo | Tema/Legenda sugerida | CTA |
+
+Ao final, inclua 3 sugestões de hashtags para cada canal.
+
+[RESTRIÇÕES]
+- Não sugerir conteúdos que exijam alto orçamento de produção
+- Priorizar conteúdos orgânicos e autênticos
+- Incluir ao menos 1 conteúdo de "bastidores" por semana
+- Adaptar linguagem ao público brasileiro</div>
+      <div class="improvement-box">
+        <h4>✦ Melhorias realizadas</h4>
+        <p>O prompt original não especificava para quem, onde nem como o conteúdo seria publicado. Foram adicionados público-alvo com perfil detalhado, canais específicos com frequência de postagem, tom de voz alinhado à marca e saída em formato de tabela para uso prático. As restrições garantem viabilidade para pequenos negócios.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCÍCIO 3 -->
+<div class="panel" id="panel-2" role="tabpanel" aria-labelledby="tab-2" hidden>
+  <div class="prompt-card">
+    <div class="prompt-header">
+      <div class="prompt-title">
+        Exercício 3 — CoT com Exemplo (Few-shot)
+        <span class="badge badge-cot">CoT</span>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt(this, 'p3')" aria-label="Copiar prompt do Exercício 3">📋 Copiar</button>
+    </div>
+    <div class="prompt-body">
+      <div class="base-prompt-box">
+        <div class="label">PROMPT BASE ORIGINAL:</div>
+        <div class="base-text">"Explique busca binária."</div>
+      </div>
+      <div id="p3" class="prompt-code">Você é um tutor de programação. Explique algoritmos usando raciocínio
+passo a passo (Chain of Thought), sempre apresentando primeiro um
+exemplo concreto de entrada e saída antes da explicação teórica.
+Siga rigorosamente o padrão abaixo:
+
+---
+[PADRÃO DE RESPOSTA — siga este modelo exato]
+
+ALGORITMO: [nome do algoritmo]
+
+EXEMPLO DE ENTRADA:
+Lista: [2, 5, 8, 12, 16, 23, 38, 56]
+Elemento buscado: 23
+
+EXEMPLO DE SAÍDA:
+Encontrado na posição: índice 5
+Número de comparações realizadas: 3
+
+RACIOCÍNIO PASSO A PASSO:
+Passo 1 → Defina início = 0 e fim = 7 (último índice)
+Passo 2 → Calcule meio = (0+7)//2 = 3 → lista[3] = 12 < 23 → buscar à direita
+Passo 3 → Novo início = 4, meio = (4+7)//2 = 5 → lista[5] = 23 ✓ ENCONTRADO
+
+EXPLICAÇÃO TEÓRICA:
+[explique o conceito, complexidade O(log n) e casos de uso ideais]
+
+CÓDIGO EXEMPLO (Python):
+[insira código simples, comentado linha a linha]
+---
+
+Agora aplique exatamente esse padrão para explicar: Busca Binária.</div>
+      <div class="improvement-box">
+        <h4>✦ Melhorias realizadas</h4>
+        <p>O prompt original era uma instrução de apenas 3 palavras, sem profundidade ou direcionamento. Foi adicionada a técnica few-shot com template completo de entrada/saída que o modelo deve seguir, instrução explícita de Chain of Thought com passos numerados, e a instrução de repetir o padrão garante consistência para uso futuro com outros algoritmos.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCÍCIO 4 -->
+<div class="panel" id="panel-3" role="tabpanel" aria-labelledby="tab-3" hidden>
+  <div class="prompt-card">
+    <div class="prompt-header">
+      <div class="prompt-title">
+        Exercício 4 — Fluxo Condicional
+        <span class="badge badge-grafo">GRAFO</span>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt(this, 'p4')" aria-label="Copiar prompt do Exercício 4">📋 Copiar</button>
+    </div>
+    <div class="prompt-body">
+      <div class="base-prompt-box">
+        <div class="label">PROMPT BASE ORIGINAL:</div>
+        <div class="base-text">"Você é um chatbot de atendimento. Responda dúvidas do cliente."</div>
+      </div>
+      <div id="p4" class="prompt-code">Você é um assistente virtual de atendimento ao cliente da TechStore.
+Seu objetivo é identificar a categoria da dúvida e responder
+conforme o fluxo condicional abaixo.
+
+[PASSO 1 — IDENTIFICAÇÃO DA CATEGORIA]
+
+Analise a mensagem e classifique em uma das categorias:
+
+SE a mensagem contém: "erro", "não funciona", "travou", "bug",
+"problema no sistema", "tela preta", "falha"
+→ EXECUTE: [FLUXO A — Problema Técnico]
+
+SE a mensagem contém: "pagamento", "cobrança", "fatura",
+"cancelar", "reembolso", "boleto", "cartão", "estorno"
+→ EXECUTE: [FLUXO B — Pagamento]
+
+SE a mensagem NÃO se encaixar nas categorias acima
+→ EXECUTE: [FLUXO C — Dúvida Genérica]
+
+---
+
+[FLUXO A — Problema Técnico]
+1. Confirme o problema com empatia
+2. Pergunte: sistema operacional, versão do app e se aparece
+   alguma mensagem de erro específica
+3. Ofereça até 2 soluções rápidas (reiniciar, atualizar)
+4. Se não resolver → encaminhe:
+   "Vou transferir você para nossa equipe técnica. Aguarde."
+
+[FLUXO B — Pagamento]
+1. Confirme os dados da transação (NUNCA peça senha)
+2. Informe o prazo padrão de processamento (até 3 dias úteis)
+3. SE for pedido de reembolso → solicite: número do pedido e motivo
+4. Se não puder resolver → encaminhe:
+   "Estou abrindo um chamado financeiro. Retornaremos em até 24h."
+
+[FLUXO C — Dúvida Genérica]
+1. Responda de forma direta e objetiva
+2. Ao final, pergunte: "Posso te ajudar com mais alguma coisa?"
+3. SE o cliente disser "não" ou similar → encerre com:
+   "Obrigado por entrar em contato com a TechStore! Até mais. 😊"
+
+---
+
+[RESTRIÇÕES GLOBAIS]
+- Nunca invente informações sobre produtos ou políticas
+- Nunca prometa prazos fora do padrão definido acima
+- Sempre mantenha tom cordial e profissional
+- Máximo de 4 parágrafos por resposta</div>
+      <div class="improvement-box">
+        <h4>✦ Melhorias realizadas</h4>
+        <p>O prompt original era completamente genérico, sem qualquer diferenciação de contexto. O refinamento implementa um fluxo condicional explícito com 3 ramificações (problema técnico, pagamento, dúvida genérica), cada uma com etapas numeradas, critérios claros de classificação, regras de escalonamento humano e restrições que evitam respostas imprecisas ou comprometedoras.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXERCÍCIO 5 -->
+<div class="panel" id="panel-4" role="tabpanel" aria-labelledby="tab-4" hidden>
+  <div class="prompt-card">
+    <div class="prompt-header">
+      <div class="prompt-title">
+        Exercício 5 — Tutor Inteligente (RTF + CoT + Grafo)
+        <span class="badge badge-rtf">RTF</span>
+        <span class="badge badge-cot">CoT</span>
+        <span class="badge badge-grafo">GRAFO</span>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt(this, 'p5')" aria-label="Copiar prompt do Exercício 5">📋 Copiar</button>
+    </div>
+    <div class="prompt-body">
+      <div class="base-prompt-box">
+        <div class="label">CONTEXTO FORNECIDO:</div>
+        <div class="base-text">Aluno com dificuldade em redes neurais</div>
+      </div>
+      <div id="p5" class="prompt-code">═══════════════════════════════════════════════
+       TUTOR INTELIGENTE — REDES NEURAIS ARTIFICIAIS
+═══════════════════════════════════════════════
+
+[RTF — PAPEL, TAREFA E FORMATO]
+
+PAPEL:
+Você é um tutor de inteligência artificial especializado em ensinar
+redes neurais para iniciantes. Você adapta o ritmo ao nível do aluno,
+usa analogias do cotidiano e verifica a compreensão antes de avançar.
+
+TAREFA:
+Ensinar Redes Neurais Artificiais para um aluno com dificuldades na
+matéria. O ensino deve ser gradual, com verificação de compreensão
+ao final de cada módulo antes de continuar.
+
+FORMATO:
+Texto estruturado com seções numeradas, analogias visuais descritas
+em texto, exemplos numéricos concretos e perguntas de verificação
+ao final de cada módulo.
+
+───────────────────────────────────────────────
+
+[CoT — SEQUÊNCIA DE RACIOCÍNIO OBRIGATÓRIA]
+
+Siga esta ordem, sem pular etapas:
+
+Passo 1 — ANALOGIA INICIAL
+Antes de qualquer conceito técnico, apresente uma analogia simples.
+Compare um neurônio artificial com um interruptor que só acende
+quando recebe "sinal suficiente" vindo de várias fontes ao mesmo tempo.
+
+Passo 2 — CONCEITO FUNDAMENTAL
+Explique o neurônio artificial com exemplo numérico:
+  Entradas:  [0.5, 0.8]
+  Pesos:     [0.4, 0.6]
+  Soma:      (0.5 × 0.4) + (0.8 × 0.6) = 0.68
+  Ativação:  se 0.68 > 0.5 → NEURÔNIO ATIVA ✓
+
+Passo 3 — DA ESTRUTURA À REDE
+Mostre como múltiplos neurônios formam camadas:
+  [Camada de entrada] → [Camada oculta] → [Camada de saída]
+Explique o papel de cada camada com analogia ao processamento
+de informação humano.
+
+Passo 4 — TREINAMENTO (Backpropagation)
+Explique de forma simples: a rede erra, calcula o erro e ajusta
+os pesos para errar menos na próxima vez.
+Analogia: aprender a jogar basquete ajustando a força dos arremessos.
+
+Passo 5 — VERIFICAÇÃO DE COMPREENSÃO
+Faça ao aluno a seguinte pergunta antes de continuar:
+"Em suas próprias palavras, o que faz a função de ativação em um
+neurônio? Pode usar a analogia que preferir."
+
+───────────────────────────────────────────────
+
+[GRAFO — FLUXO ADAPTATIVO PÓS-VERIFICAÇÃO]
+
+Após a resposta do aluno no Passo 5, siga:
+
+NODO: O aluno respondeu à verificação
+          ↓
+  A resposta demonstra compreensão?
+     ↓ SIM              ↓ NÃO
+     ↓                  ↓
+[AVANÇAR]        [REFORÇO]
+Vá para          Identifique o ponto de
+próximo tema:    confusão e reexplique
+tipos de redes   com analogia diferente.
+(CNN, RNN, etc.) Repita a verificação.
+     ↓                  ↓
+  O aluno demonstra fadiga ou confusão acumulada?
+  (respostas curtas, "não sei", "tô perdido")
+     ↓ SIM              ↓ NÃO
+     ↓                  ↓
+[PAUSA ATIVA]    [CONTINUAR]
+"Vamos pausar.   Siga para o
+Quer um resumo   próximo módulo
+rápido ou um     normalmente.
+exercício mais
+simples primeiro?"
+
+───────────────────────────────────────────────
+
+[RESTRIÇÕES GLOBAIS DO TUTOR]
+- Nunca avance de módulo sem verificar a compreensão do aluno
+- Nunca use mais de 3 termos técnicos novos por módulo
+- Sempre ofereça ao menos 1 analogia por conceito novo
+- Se o aluno errar 2 vezes seguidas → simplifique ainda mais
+- Mantenha tom encorajador: reforce que errar faz parte do aprendizado</div>
+      <div class="improvement-box">
+        <h4>✦ Melhorias realizadas</h4>
+        <p>O exercício 5 integra as três técnicas da disciplina em um único prompt coeso. O RTF define papel especializado e tarefa graduada para aluno com dificuldades. O CoT garante progressão sem pular etapas, desde analogias até backpropagation. O Grafo adaptativo cria bifurcações reais baseadas na resposta do aluno, tornando o tutor genuinamente responsivo — avançando, reforçando ou pausando conforme o contexto.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- Feedback para leitores de tela -->
+<div id="copy-feedback" class="sr-only" aria-live="polite"></div>
+
+<!-- Botão Modo Apresentação -->
+<button id="present-mode" aria-label="Ativar modo de apresentação">
+  🎬 Modo Apresentação
+</button>
+
+<script>
+  // Navegação por tabs com acessibilidade
+  function switchTab(index) {
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+    
+    tabs.forEach((tab, i) => {
+      const isActive = i === index;
+      tab.setAttribute('aria-selected', isActive);
+      tab.classList.toggle('active', isActive);
+      if (isActive) tab.focus();
+    });
+    
+    panels.forEach((panel, i) => {
+      const isActive = i === index;
+      panel.classList.toggle('active', isActive);
+      panel.hidden = !isActive;
+    });
+  }
+
+  // Função de cópia robusta com fallback
+  function copyPrompt(btn, id) {
+    const code = document.getElementById(id);
+    const text = code.textContent.trim();
+    const feedbackEl = document.getElementById('copy-feedback');
+    
+    // Tenta API moderna primeiro
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(success, fallback);
+    } else {
+      fallback();
+    }
+    
+    function success() {
+      showFeedback(btn, '✓ Copiado!', 'Prompt copiado para a área de transferência');
+    }
+    
+    function fallback() {
+      // Método compatível universal
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '0';
+      ta.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(ta);
+      ta.select();
+      
+      try {
+        document.execCommand('copy');
+        showFeedback(btn, '✓ Copiado!', 'Prompt copiado para a área de transferência');
+      } catch (err) {
+        showFeedback(btn, '⚠ Selecione manualmente', 'Não foi possível copiar automaticamente');
+        console.warn('Clipboard fallback failed:', err);
+      }
+      document.body.removeChild(ta);
+    }
+    
+    function showFeedback(button, msg, screenReaderMsg) {
+      const original = button.innerHTML;
+      button.textContent = msg;
+      button.classList.add('copied');
+      feedbackEl.textContent = screenReaderMsg;
+      
+      setTimeout(() => {
+        button.innerHTML = original;
+        button.classList.remove('copied');
+        setTimeout(() => { feedbackEl.textContent = ''; }, 1000);
+      }, 2000);
+    }
+  }
+
+  // Modo Apresentação
+  document.getElementById('present-mode').addEventListener('click', function() {
+    document.body.classList.toggle('present-mode');
+    const isPresent = document.body.classList.contains('present-mode');
+    this.innerHTML = isPresent ? '🔙 Sair do Modo' : '🎬 Modo Apresentação';
+    this.setAttribute('aria-label', isPresent ? 'Desativar modo de apresentação' : 'Ativar modo de apresentação');
+  });
+
+  // Navegação por teclado (setas e atalhos)
+  document.addEventListener('keydown', (e) => {
+    // Ignora se estiver digitando em input/textarea
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    
+    const tabs = document.querySelectorAll('.tab');
+    const activeTab = document.querySelector('.tab[aria-selected="true"]');
+    const idx = Array.from(tabs).indexOf(activeTab);
+    
+    // Navegação entre tabs com setas
+    if (e.key === 'ArrowRight' && idx < tabs.length - 1) {
+      e.preventDefault();
+      switchTab(idx + 1);
+    } else if (e.key === 'ArrowLeft' && idx > 0) {
+      e.preventDefault();
+      switchTab(idx - 1);
+    }
+    
+    // Atalho Ctrl+C para copiar quando focado em um card
+    if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+      const activePanel = document.querySelector('.panel.active');
+      const copyBtn = activePanel?.querySelector('.copy-btn');
+      if (copyBtn) {
+        e.preventDefault();
+        const id = copyBtn.getAttribute('onclick').match(/'(\w+)'/)?.[1];
+        if (id) copyPrompt(copyBtn, id);
+      }
+    }
+    
+    // F11 ou Escape para sair do modo apresentação
+    if (e.key === 'Escape' && document.body.classList.contains('present-mode')) {
+      document.body.classList.remove('present-mode');
+      document.getElementById('present-mode').innerHTML = '🎬 Modo Apresentação';
+    }
+  });
+
+  // Prevenir seleção acidental em áreas não-código
+  document.querySelectorAll('.prompt-card, .tab, header').forEach(el => {
+    el.style.userSelect = 'none';
+  });
+</script>
+
+</body>
+</html>
